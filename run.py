@@ -15,3 +15,7 @@ b.appendTrip(Trip(100,110,Driver('Janns')))
 print(b.writeTrips())
 b.clear()
 print(b.writeTrips())
+tt = Trip(0,0,'-')
+print(tt.read('44\t55\tLuis'));
+b.readTrips('0\t10\tjose\n10\t100\tluis')
+print(b.writeTrips())
