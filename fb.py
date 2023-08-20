@@ -48,13 +48,24 @@ class Billing():
  def clear(self) : self.trips=[]; self.bills= [];
  def writeTrips(self): return '\n'.join(map(lambda t: t.write(), self.trips)) 
  def writeBills(self): return '\n'.join(map(lambda b: b.write(), self.bills)) 
+ 
  def readTrips(self, serial) : 
   self.trips = []
   for s in serial.split('\n'): self.appendTrip(readTrip(s))
+ 
  def readBills(self, serial) : 
   self.bills = []
   for s in serial.split('\n'): self.appendBill(readBill(s))
-
+  
+ def load(self, dir):
+  self.readBills(loadFile(dir + '/bills.txt'))
+  self.readTrips(loadFile(dir + '/trips.txt'))
+  return self
+ 
+ def store(self, dir):
+  storeFile(dir + '/bills.txt',self.writeBills()) 
+  storeFile(dir + '/trips.txt',self.writeTrips()) 
+ 
 def loadFile(fname):
  r = ''
  if os.path.exists(fname):
@@ -70,13 +81,3 @@ def storeFile(fname, data):
  r = bf.write(data)
  bf.close()
   
-def loadBilling(dir):
- b = Billing('test')
- b.readBills(loadFile(dir + '/bills.txt'))
- b.readTrips(loadFile(dir + '/trips.txt'))
- return b
- 
-def storeBilling(dir, billing):
- storeFile(dir + '/bills.txt',billing.writeBills()) 
- storeFile(dir + '/trips.txt',billing.writeTrips()) 
- 
