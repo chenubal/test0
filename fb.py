@@ -1,3 +1,6 @@
+from pathlib import Path
+import os
+
 class Driver():
  ''' Driver class holds a drivers name'''
  def __init__(self, name = ''): self.name = name
@@ -6,18 +9,6 @@ class Driver():
  def valid(self): return len(self.name) > 0
  def write(self): return str(self.name)
  
-def readTrip(serial) :
- s = '0'; e='0'; d='' 
- if serial.count('\t') == 2: 
-  s,e,d = serial.split('\t')
- return Trip(int(s),int(e), Driver(d))
- 
-def readBill(serial) : 
- a = '0'; d='' 
- if serial.count('\t') == 1: 
-  a,d = serial.split('\t')
- return Bill(float(a), Driver(d))
-
 class Trip():
  ''' Trip class holds trip data [start,end] of a driver'''
  def __init__(self, start=0, end=0, driver='' ): self.start = int(start); self.end=int(end); self.driver = Driver(driver);
@@ -27,6 +18,12 @@ class Trip():
  def write(self): return '\t'.join([str(self.start), str(self.end), str(self.driver)])
  def read(self, serial) : self = readTrip(serial); return self
  
+def readTrip(serial) :
+ s = '0'; e='0'; d='' 
+ if serial.count('\t') == 2: 
+  s,e,d = serial.split('\t')
+ return Trip(int(s),int(e), Driver(d))
+ 
 class Bill():
  ''' Bill class holds bill data [amount] of a driver'''
  def __init__(self, amount=0, driver='' ): self.amount = float(amount); self.driver = Driver(driver);
@@ -34,6 +31,13 @@ class Bill():
  def valid(self): return self.amount > 0 and self.driver.valid()
  def write(self): return '\t'.join([str(self.amount), str(self.driver)])
  def read(self, serial) : self = readBill(serial); return self
+
+def readBill(serial) : 
+ a = '0'; d='' 
+ if serial.count('\t') == 1: 
+  a,d = serial.split('\t')
+ return Bill(float(a), Driver(d))
+
   
 class Billing():
  ''' Billing class holds bills and trips'''
@@ -50,3 +54,29 @@ class Billing():
  def readBills(self, serial) : 
   self.bills = []
   for s in serial.split('\n'): self.appendBill(readBill(s))
+
+def loadFile(fname):
+ r = ''
+ if os.path.exists(fname):
+  bf = open(fname,'r')
+  r = bf.read()
+  bf.close()
+ return r 
+
+def storeFile(fname, data):
+ if os.path.exists(fname):
+  os.remove(fname)
+ bf = open(fname,'w')
+ r = bf.write(data)
+ bf.close()
+  
+def loadBilling(dir):
+ b = Billing('test')
+ b.readBills(loadFile(dir + '/bills.txt'))
+ b.readTrips(loadFile(dir + '/trips.txt'))
+ return b
+ 
+def storeBilling(dir, billing):
+ storeFile(dir + '/bills.txt',billing.writeBills()) 
+ storeFile(dir + '/trips.txt',billing.writeTrips()) 
+ 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from fb import Driver, Trip, Bill, Billing
+from fb import Driver, Trip, Bill, Billing, loadBilling,storeBilling
 
 print(Driver('Josef'));
 print('cmp drivers: ' + str(Driver('Josef')==Driver('Josef2')))
@@ -19,3 +19,8 @@ tt = Trip(0,0,'-')
 print(tt.read('44\t55\tLuis'));
 b.readTrips('0\t10\tjose\n10\t100\tluis')
 print(b.writeTrips())
+
+bb = loadBilling('../billing_db/Abrechnung am 05-07-2023')
+print(bb.writeTrips()+'\n')
+print(bb.writeBills()+'\n')
+storeBilling('../tmp',bb)
