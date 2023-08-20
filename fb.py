@@ -20,6 +20,7 @@ class Trip():
  
 def readTrip(serial) :
  s = '0'; e='0'; d='' 
+ serial = serial.strip()
  if serial.count('\t') == 2: 
   s,e,d = serial.split('\t')
  return Trip(int(s),int(e), Driver(d))
@@ -35,9 +36,8 @@ class Bill():
 def readBill(serial) : 
  a = '0'; d='' 
  if serial.count('\t') == 1: 
-  a,d = serial.split('\t')
+  a,d = serial.strip().split('\t')
  return Bill(float(a), Driver(d))
-
   
 class Billing():
  ''' Billing class holds bills and trips'''
@@ -48,36 +48,23 @@ class Billing():
  def clear(self) : self.trips=[]; self.bills= [];
  def writeTrips(self): return '\n'.join(map(lambda t: t.write(), self.trips)) 
  def writeBills(self): return '\n'.join(map(lambda b: b.write(), self.bills)) 
- 
- def readTrips(self, serial) : 
-  self.trips = []
-  for s in serial.split('\n'): self.appendTrip(readTrip(s))
- 
- def readBills(self, serial) : 
-  self.bills = []
-  for s in serial.split('\n'): self.appendBill(readBill(s))
   
  def load(self, dir):
-  self.readBills(loadFile(dir + '/bills.txt'))
-  self.readTrips(loadFile(dir + '/trips.txt'))
+  self.clear()
+  loadFile(dir + '/bills.txt',lambda s: self.appendBill(readBill(s)) )
+  loadFile(dir + '/trips.txt',lambda s: self.appendTrip(readTrip(s)) )
   return self
  
  def store(self, dir):
   storeFile(dir + '/bills.txt',self.writeBills()) 
   storeFile(dir + '/trips.txt',self.writeTrips()) 
  
-def loadFile(fname):
- r = ''
+def loadFile(fname, f):
  if os.path.exists(fname):
-  bf = open(fname,'r')
-  r = bf.read()
-  bf.close()
- return r 
+  for s in open(fname,'r') : f(s)
 
 def storeFile(fname, data):
- if os.path.exists(fname):
-  os.remove(fname)
- bf = open(fname,'w')
- r = bf.write(data)
- bf.close()
+ h = open(fname,'w')
+ r = h.write(data)
+ h.close()
   
