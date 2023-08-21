@@ -64,4 +64,9 @@ def loadFile(fname, f):
   for s in open(fname,'r') : f(s)
 
 def storeFile(fname, data): open(fname,'w').write(data)
+
+def loadDatabase(path = './billing_db' ):
+ p = Path(path)
+ return [x for x in p.iterdir() if x.is_dir()]
+
   
