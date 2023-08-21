@@ -63,8 +63,5 @@ def loadFile(fname, f):
  if os.path.exists(fname):
   for s in open(fname,'r') : f(s)
 
-def storeFile(fname, data):
- h = open(fname,'w')
- r = h.write(data)
- h.close()
+def storeFile(fname, data): open(fname,'w').write(data)
   

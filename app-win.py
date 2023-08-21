@@ -1,24 +1,14 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton
-
+from PyQt5.QtWidgets import QApplication, QMainWindow
+from fb_view import createFBWidget
 
 class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-
-        self.setWindowTitle("My App")
-
-        button = QPushButton("Press Me!")
-        button.setCheckable(True)
-        button.clicked.connect(lambda : print("Josef!"))
-
-        # Set the central widget of the Window.
-        self.setCentralWidget(button)
-
+ def __init__(self):
+  super().__init__()
+  self.setWindowTitle("Fartenbuch")
+  self.setCentralWidget(createFBWidget(self))
 
 app = QApplication(sys.argv)
-
 window = MainWindow()
 window.show()
-
 app.exec()
