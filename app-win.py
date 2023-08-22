@@ -1,14 +1,22 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtCore import QObject, Signal, Slot    
 from fb_view import BillingDB_Widget
 from fb import getBillingPathes, Billing
 
-class BillingDB():
-  def __init__(self):
+class BillingDB(QObject):
+ 
+  selSignal = Signal(int)
+ 
+  def __init__(self, parent=None):
+    super().__init__(parent)
     self.pathes = getBillingPathes()
     self.selected = -1
-
-  def select(self, i) : self.selected = i; self.load()
+    self.selSignal.connect(lambda i: print(i))
+  
+  def select(self, i) : 
+    self.selected = i
+    self.selSignal.emit(int(i))
   
   def load(self):
     i = self.selected

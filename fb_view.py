@@ -1,4 +1,4 @@
-import PyQt5.QtWidgets as W
+import PySide6 .QtWidgets as W
 
 def layoutBillingList(model):
   listwidget = W.QListWidget()
