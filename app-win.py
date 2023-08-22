@@ -12,21 +12,21 @@ class BillingDB(QObject):
     super().__init__(parent)
     self.pathes = getBillingPathes()
     self.selected = -1
-    self.selSignal.connect(lambda i: print(i))
+    self.selSignal.connect(lambda i: self.load())
   
   def select(self, i) : 
-    self.selected = i
-    self.selSignal.emit(int(i))
+    if 0 <= i < len(self.pathes):
+      self.selected = i
+      self.selSignal.emit(self.selected)
   
   def load(self):
     i = self.selected
-    if i >= 0:
+    if 0 <= i < len(self.pathes):
       b = Billing().load(str(self.pathes[i].absolute()))
       print(b.writeTrips())
-      return b
-  
+      return b  
 
-class BillingDB_View(QMainWindow):
+class MainWindow(QMainWindow):
   def __init__(self, billingDB):
     super().__init__()
     self.setMinimumSize(800, 500)
@@ -35,7 +35,6 @@ class BillingDB_View(QMainWindow):
     self.setCentralWidget(BillingDB_Widget(self.model))
 
 app = QApplication(sys.argv)
-database = BillingDB()
-window = BillingDB_View(database)
+window = MainWindow(BillingDB())
 window.show()
 app.exec()
