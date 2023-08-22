@@ -1,39 +1,42 @@
 import PyQt5.QtWidgets as W
 
-def layoutBillingList(database):
- lw = W.QListWidget()
- lw.setMaximumSize(300, 800)
- for x in database: 
-  lw.addItem(x.name)
- lw.currentRowChanged.connect(lambda x: print(f'item {x}'))
+def layoutBillingList(model):
+ listwidget = W.QListWidget()
+ listwidget.setMaximumSize(300, 800)
+ for x in model.database: 
+  listwidget.addItem(x.name)
+ listwidget.currentRowChanged.connect(lambda i: model.loadBilling(i))
+ if len(model.database) > 0: listwidget.setCurrentRow(0)
  
- layout = W.QVBoxLayout()
- layout.addWidget(W.QLabel('Anrechnungen:'))
- layout.addWidget(lw)
- return layout
+ vbox = W.QVBoxLayout()
+ vbox.addWidget(W.QLabel('Anrechnungen:'))
+ vbox.addWidget(listwidget)
+ return vbox
 
 def layoutBilling():
- layout = W.QVBoxLayout()
  button = W.QPushButton("Mid!")
  button.setCheckable(True)
  button.clicked.connect(lambda : print("Mid!"))
- layout.addWidget(button)
- return layout
+
+ vbox = W.QVBoxLayout()
+ vbox.addWidget(button)
+ return vbox
  
 def layoutResult():
- layout = W.QVBoxLayout()
  button = W.QPushButton("Right!")
  button.setCheckable(True)
  button.clicked.connect(lambda : print("Right!"))
- layout.addWidget(button)
- return layout
+
+ vbox = W.QVBoxLayout()
+ vbox.addWidget(button)
+ return vbox
  
-def createFBWidget(parent) :
- layout = W.QHBoxLayout()
- layout.addLayout(layoutBillingList(parent.database))
- layout.addLayout(layoutBilling())
- layout.addLayout(layoutResult())
+def createFBWidget(parent,model) :
+ hbox = W.QHBoxLayout()
+ hbox.addLayout(layoutBillingList(model))
+ hbox.addLayout(layoutBilling())
+ hbox.addLayout(layoutResult())
 
  mainW = W.QWidget(parent)
- mainW.setLayout(layout)
+ mainW.setLayout(hbox)
  return mainW
