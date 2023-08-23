@@ -44,12 +44,11 @@ class Billing():
   def __init__(self, name=''): self.name = name; self.bills = []; self.trips = []; self.insurance = 0.05;
   def __str__(self): return f'Billing "{self.name}"'
   def appendTrip(self, trip): self.trips.append(trip)  
-  def appendBill(self, bill): 
-    self.bills.append(bill)  
-    print(bill)
-  def clear(self) : self.trips=[]; self.bills= [];
+  def appendBill(self, bill): self.bills.append(bill)  
+  def clear(self) : self.trips=[]; self.bills= []
   def writeTrips(self): return '\n'.join(map(lambda t: t.write(), self.trips)) 
   def writeBills(self): return '\n'.join(map(lambda b: b.write(), self.bills)) 
+
   def load(self, dir):
     self.clear()
     loadFile(dir + '\\bills.txt',lambda s: self.appendBill(readBill(s)) )
