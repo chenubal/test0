@@ -1,4 +1,5 @@
 from pathlib import Path
+from functools import reduce
 import os
 
 class Driver():
@@ -62,27 +63,24 @@ class Billing():
 
   def allDriver(self):
     result = []
-    for trip in self.trips: 
-      if not result.count(trip.driver) : result.append(trip.driver)
-    for bill in self.bills: 
-      if not result.count(bill.driver) : result.append(bill.driver)
+    def l(r,x): 
+      if not r.count(x.driver) : r.append(x.driver)
+      return r
+    reduce(l, self.trips,result)
+    reduce(l, self.bills,result)
     return result
   
   def dtrip(self, driver=None):
-    result = 0
-    all = driver is None
-    for trip in self.trips: 
-      if  all or driver == trip.driver : 
-        result += trip.dist()
-    return result
+    def l(r,x): 
+      if driver is None or driver == x.driver: r += x.dist()
+      return r
+    return reduce(l,self.trips,0)
   
   def dbill(self, driver=None):
-    result = 0
-    all = driver is None
-    for bill in self.bills: 
-      if all or driver == bill.driver: 
-        result += bill.amount
-    return result
+    def l(r,x): 
+      if driver is None or driver == x.driver: r += x.amount
+      return r
+    return reduce(l,self.bills,0)
  
   def report(self):
     totalTrips = self.dtrip()
