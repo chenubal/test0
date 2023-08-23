@@ -30,9 +30,10 @@ class Pathes_Widget(W.QWidget):
      if len(self.pathes) > 0: self.lw.setCurrentRow(0)
  
 class Billing_Widget(W.QWidget):
-  def __init__(self):
+  def __init__(self, follower):
     super().__init__()
     self.billing = Billing()
+    self.follower = follower
  
     self.billTable = W.QTableWidget()
     self.billTable.setColumnCount(2)
@@ -74,15 +75,31 @@ class Billing_Widget(W.QWidget):
     self.billing.load(path)
     self.makeBillTable()
     self.makeTripTable()
+    self.follower.update(self.billing)
+
+class ReportWidget(W.QWidget):
+  def __init__(self):
+    super().__init__()
+    vbox = W.QVBoxLayout()
+    vbox.addWidget( W.QLabel("Zusammenfassung:"))
+    self.textEdit = W.QTextEdit()
+    vbox.addWidget( self.textEdit)
+    self.setLayout(vbox)
+
+  def update(self, billing):
+    self.textEdit.setText(billing.writeTrips())
+
 
 class MasterWidget(W.QWidget):
   def __init__(self, pathes):
     super().__init__()
-    billingWidget = Billing_Widget()
+    reportWidget = ReportWidget()
+    billingWidget = Billing_Widget(reportWidget)
     pathesWidget = Pathes_Widget(pathes,billingWidget)
     hbox = W.QHBoxLayout()
     hbox.addWidget(pathesWidget)
     hbox.addWidget(billingWidget)
+    hbox.addWidget(reportWidget)
     hbox.addStretch()
     self.setLayout(hbox)
  
