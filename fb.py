@@ -63,28 +63,28 @@ class Billing():
 
   def allDriver(self):
     result = []
-    def l(r,x): 
+    def add(r,x): 
       if not r.count(x.driver) : r.append(x.driver)
       return r
-    reduce(l, self.trips,result)
-    reduce(l, self.bills,result)
+    reduce(add, self.trips,result)
+    reduce(add, self.bills,result)
     return result
   
-  def dtrip(self, driver=None):
-    def l(r,x): 
+  def driverTrips(self, driver=None):
+    def add(r,x): 
       if driver is None or driver == x.driver: r += x.dist()
       return r
-    return reduce(l,self.trips,0)
+    return reduce(add,self.trips,0)
   
-  def dbill(self, driver=None):
-    def l(r,x): 
+  def driversBill(self, driver=None):
+    def add(r,x): 
       if driver is None or driver == x.driver: r += x.amount
       return r
-    return reduce(l,self.bills,0)
+    return reduce(add,self.bills,0)
  
   def report(self):
-    totalTrips = self.dtrip()
-    totalBills = self.dbill()
+    totalTrips = self.driverTrips()
+    totalBills = self.driversBill()
     totalEnsure = totalTrips * 0.05
     total = totalEnsure+totalBills
     s = f'----------------- {self.name} -----------------------\n'
@@ -96,8 +96,8 @@ class Billing():
     s += f'Quote (T):  {round(100*total/totalTrips,2)} ct/km\n'
     s += f'Vesicherung:  5.00 ct/km\n'
     for drv in self.allDriver():
-      dBill = self.dbill(drv)
-      dRatio = self.dtrip(drv)/totalTrips
+      dBill = self.driversBill(drv)
+      dRatio = self.driverTrips(drv)/totalTrips
       dTotal = dRatio*total
       s += f'-------------------------------\n'
       s += f'Fahrer: {str(drv)}\n'

@@ -24,7 +24,8 @@ class Pathes_Widget(W.QWidget):
  
   def fillList(self):
      self.lw.clear()
-     for p in self.pathes: self.lw.addItem(p.name)
+     for p in self.pathes: 
+       self.lw.addItem(p.name)
      if len(self.pathes) > 0: self.lw.setCurrentRow(0)
  
 class Billing_Widget(W.QWidget):
@@ -53,8 +54,8 @@ class Billing_Widget(W.QWidget):
     n = len(self.billing.trips)
     self.tripTable.clearContents()
     self.tripTable.setRowCount(n)
-    setCellWidget = lambda n,m,s: self.tripTable.setCellWidget(n,m, W.QLabel(s))
-    for [i,t] in zip(range(n),self.billing.trips):
+    setCellWidget = lambda i,j,s: self.tripTable.setCellWidget(i,j, W.QLabel(s))
+    for i,t in zip(range(n),self.billing.trips):
       setCellWidget(i,0, f'{t.start}')
       setCellWidget(i,1, f'{t.end}')
       setCellWidget(i,2, f'{t.driver}')
@@ -65,7 +66,7 @@ class Billing_Widget(W.QWidget):
     self.billTable.clearContents()
     self.billTable.setRowCount(n)
     setCellWidget = lambda n,m,s: self.billTable.setCellWidget(n,m, W.QLabel(s))
-    for [i,b] in zip(range(n), self.billing.bills):
+    for i,b in zip(range(n), self.billing.bills):
       setCellWidget(i,0, f'{b.amount}€')
       setCellWidget(i,1, f'{b.driver}')
     self.billTable.horizontalHeader().setSectionResizeMode(W.QHeaderView.Stretch)
