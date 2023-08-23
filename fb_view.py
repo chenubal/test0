@@ -1,10 +1,12 @@
 import PySide6 .QtWidgets as W
+from PySide6.QtCore import QObject, Signal, Slot    
 
 class Pathes_Widget(W.QWidget):
-  def __init__(self, model):
+  def __init__(self, pathes, other):
     super().__init__()
-    self.m = model
-    self.lw = self.makeWidgets(self.m)
+    self.pathes = pathes
+    self.lw = self.makeWidgets()
+    self.makeConnection(other)
     self.fillList()
  
     vbox = W.QVBoxLayout()
@@ -12,41 +14,45 @@ class Pathes_Widget(W.QWidget):
     vbox.addWidget(self.lw) 
     self.setLayout(vbox)
     
-  def makeWidgets(self,model):
+  def makeConnection(self,other):
+    sendPath = lambda i: other.update(str(self.pathes[i].absolute()))
+    self.lw.currentRowChanged.connect(sendPath)
+    
+  def makeWidgets(self):
     lw = W.QListWidget()
     lw.setMaximumSize(300, 800)
-    lw.currentRowChanged.connect(model.select)
     return lw
  
   def fillList(self):
      self.lw.clear()
-     for p in self.m.pathes: self.lw.addItem(p.name)
-     if len(self.m.pathes) > 0: self.lw.setCurrentRow(0)
+     for p in self.pathes:
+       self.lw.addItem(p.name)
+     if len(self.pathes) > 0: 
+       self.lw.setCurrentRow(0)
  
-def layoutBilling():
-  button = W.QPushButton("Mid!")
-  button.setCheckable(True)
-  button.clicked.connect(lambda : print("Mid!"))
-
-  vbox = W.QVBoxLayout()
-  vbox.addWidget(button)
-  return vbox
- 
-def layoutResult():
-  button = W.QPushButton("Right!")
-  button.setCheckable(True)
-  button.clicked.connect(lambda : print("Right!"))
-
-  vbox = W.QVBoxLayout()
-  vbox.addWidget(button)
-  return vbox
- 
-class BillingDB_Widget(W.QWidget):
-  def __init__(self, model):
+class Billing_Widget(W.QWidget):
+  def __init__(self):
     super().__init__()
+    button = W.QPushButton("Mid!")
+    button.setCheckable(True)
+    button.clicked.connect(lambda : print("Mid!"))
+
+    vbox = W.QVBoxLayout()
+    vbox.addWidget(button)
+    self.setLayout(vbox)
+
+  def update(self, path):
+    print(path)
+ 
+class MasterWidget(W.QWidget):
+   def __init__(self, pathes):
+    super().__init__()
+    billingWidget = Billing_Widget()
+    pathesWidget = Pathes_Widget(pathes,billingWidget)
+ 
+
     hbox = W.QHBoxLayout()
-    hbox.addWidget(Pathes_Widget(model))
-    hbox.addLayout(layoutBilling())
-    hbox.addLayout(layoutResult())
+    hbox.addWidget(pathesWidget)
+    hbox.addWidget(billingWidget)
     self.setLayout(hbox)
  
