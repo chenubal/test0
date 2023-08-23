@@ -6,7 +6,7 @@ from fb import getBillingPathes
 class MainWindow(QMainWindow):
   def __init__(self):
     super().__init__()
-    self.setMinimumSize(800, 500)
+    self.setMinimumSize(1200, 500)
     self.setWindowTitle("Fahrtenbuch")
     masterWidget = MasterWidget(getBillingPathes())
     self.setCentralWidget(masterWidget)

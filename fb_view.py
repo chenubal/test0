@@ -21,7 +21,6 @@ class Pathes_Widget(W.QWidget):
     
   def makeWidgets(self):
     lw = W.QListWidget()
-    lw.setMaximumSize(300, 800)
     return lw
  
   def fillList(self):
@@ -32,6 +31,7 @@ class Pathes_Widget(W.QWidget):
 class Billing_Widget(W.QWidget):
   def __init__(self, follower):
     super().__init__()
+    self.setMinimumWidth(500)
     self.billing = Billing()
     self.follower = follower
  
@@ -80,6 +80,7 @@ class Billing_Widget(W.QWidget):
 class ReportWidget(W.QWidget):
   def __init__(self):
     super().__init__()
+    self.setMinimumWidth(500)
     vbox = W.QVBoxLayout()
     vbox.addWidget( W.QLabel("Zusammenfassung:"))
     self.textEdit = W.QTextEdit()
@@ -87,7 +88,7 @@ class ReportWidget(W.QWidget):
     self.setLayout(vbox)
 
   def update(self, billing):
-    self.textEdit.setText(billing.writeTrips())
+    self.textEdit.setText(billing.report())
 
 
 class MasterWidget(W.QWidget):

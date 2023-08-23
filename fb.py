@@ -14,7 +14,7 @@ class Trip():
   def __init__(self, start=0, end=0, driver='' ): self.start = int(start); self.end=int(end); self.driver = Driver(driver);
   def __str__(self): return f'Driver {self.driver}: from {self.start} to {self.end}'
   def valid(self): return self.end > self.end and self.driver.valid()
-  def dist(self): return max(0,self.end - self.end)
+  def dist(self): return max(0,self.end - self.start)
   def write(self): return '\t'.join([str(self.start), str(self.end), str(self.driver)])
   def read(self, serial) : self = readTrip(serial); return self
  
@@ -53,11 +53,58 @@ class Billing():
     self.clear()
     loadFile(dir + '\\bills.txt',lambda s: self.appendBill(readBill(s)) )
     loadFile(dir + '\\trips.txt',lambda s: self.appendTrip(readTrip(s)) )
+    self.name = Path(dir).name
     return self
  
   def store(self, dir):
     storeFile(dir + '/bills.txt',self.writeBills()) 
     storeFile(dir + '/trips.txt',self.writeTrips()) 
+
+  def drivers(self):
+    d = []
+    for x in self.trips: 
+      if not d.count(x.driver) : d.append(x.driver)
+    for x in self.bills: 
+      if not d.count(x.driver) : d.append(x.driver)
+    return d
+  def dtrip(self, name):
+    t = 0
+    for x in self.trips: 
+      if name == str(x.driver) : t += x.dist()
+    return t
+  
+  def dbill(self, name):
+    t = 0
+    for x in self.bills: 
+      if name == str(x.driver) : t += x.amount
+    return t
+ 
+  def report(self):
+    totalTrips = 0
+    for x in self.trips: totalTrips += x.dist()
+    totalBills = 0
+    for x in self.bills: totalBills += x.amount
+    totalEnsure = totalTrips * 0.05
+    total = totalEnsure+totalBills
+    s = f'----------------- {self.name} -----------------------\n'
+    s += f'Reisen gesamt:  {totalTrips}km\n'
+    s += f'Tanken gesamt:  {totalBills}€\n'
+    s += f'Versich. gesamt:  {totalEnsure}€\n'
+    s += f'Kosten gesamt:  {total}€\n'
+    s += f'Quote (R):  {round(100*totalBills/totalTrips,2)} ct/km\n'
+    s += f'Quote (T):  {round(100*total/totalTrips,2)} ct/km\n'
+    s += f'Vesicherung:  5.00 ct/km\n'
+    for x in self.drivers():
+      dBill = self.dbill(str(x))
+      dRatio = self.dtrip(str(x))/totalTrips
+      dTotal = dRatio*total
+      s += f'-------------------------------\n'
+      s += f'Fahrer: {str(x)}\n'
+      s += f'Quote = {round(dRatio,2)}\n'
+      s += f'Anteil = {round(dTotal,2)}€\n'
+      s += f'Bezahlt = {round(dBill,2)}€\n'
+      s += f'Rest = {round(dTotal-dBill,2)}€\n'
+    return s
  
 def loadFile(fname, f):
   if os.path.exists(fname):
