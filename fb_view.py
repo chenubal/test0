@@ -1,13 +1,12 @@
 import PySide6 .QtWidgets as W
-from PySide6.QtCore import QObject, Signal, Slot  
 from fb import Billing  
 
 class Pathes_Widget(W.QWidget):
-  def __init__(self, pathes, other):
+  def __init__(self, pathes, follower):
     super().__init__()
     self.pathes = pathes
     self.lw = self.makeWidgets()
-    self.makeConnection(other)
+    self.makeConnection(follower)
     self.fillList()
  
     vbox = W.QVBoxLayout()
@@ -15,8 +14,8 @@ class Pathes_Widget(W.QWidget):
     vbox.addWidget(self.lw) 
     self.setLayout(vbox)
     
-  def makeConnection(self,other):
-    sendPath = lambda i: other.update(str(self.pathes[i].absolute()))
+  def makeConnection(self,follower):
+    sendPath = lambda i: follower.update(str(self.pathes[i].absolute()))
     self.lw.currentRowChanged.connect(sendPath)
     
   def makeWidgets(self):
@@ -41,7 +40,7 @@ class Billing_Widget(W.QWidget):
 
     self.tripTable = W.QTableWidget()
     self.tripTable.setColumnCount(3)
-    self.tripTable.setHorizontalHeaderLabels(['Start','Ende','Fahrer'])
+    self.tripTable.setHorizontalHeaderLabels(['Start(km)','Ende(km)','Fahrer'])
 
     vbox = W.QVBoxLayout()
     vbox.addWidget( W.QLabel("Rechnungen:"))
@@ -51,24 +50,24 @@ class Billing_Widget(W.QWidget):
     self.setLayout(vbox)
 
   def makeTripTable(self):
+    n = len(self.billing.trips)
     self.tripTable.clearContents()
-    self.tripTable.setRowCount(len(self.billing.trips))
-    i = 0
-    for x in self.billing.trips:
-      self.tripTable.setCellWidget(i,0, W.QLabel(f'km {x.start}'))
-      self.tripTable.setCellWidget(i,1, W.QLabel(f'km {x.end}'))
-      self.tripTable.setCellWidget(i,2, W.QLabel(f'{x.driver}'))
-      i = i+1
+    self.tripTable.setRowCount(n)
+    setCellWidget = lambda n,m,s: self.tripTable.setCellWidget(n,m, W.QLabel(s))
+    for [i,t] in zip(range(n),self.billing.trips):
+      setCellWidget(i,0, f'{t.start}')
+      setCellWidget(i,1, f'{t.end}')
+      setCellWidget(i,2, f'{t.driver}')
     self.tripTable.horizontalHeader().setSectionResizeMode(W.QHeaderView.Stretch)
 
   def makeBillTable(self):
+    n = len(self.billing.bills)
     self.billTable.clearContents()
-    self.billTable.setRowCount(len(self.billing.bills))
-    i = 0
-    for x in self.billing.bills:
-      self.billTable.setCellWidget(i,0, W.QLabel(f'{x.amount}€'))
-      self.billTable.setCellWidget(i,1, W.QLabel(f'{x.driver}'))
-      i = i+1
+    self.billTable.setRowCount(n)
+    setCellWidget = lambda n,m,s: self.billTable.setCellWidget(n,m, W.QLabel(s))
+    for [i,b] in zip(range(n), self.billing.bills):
+      setCellWidget(i,0, f'{b.amount}€')
+      setCellWidget(i,1, f'{b.driver}')
     self.billTable.horizontalHeader().setSectionResizeMode(W.QHeaderView.Stretch)
 
   def update(self, path):
@@ -89,7 +88,6 @@ class ReportWidget(W.QWidget):
 
   def update(self, billing):
     self.textEdit.setText(billing.report())
-
 
 class MasterWidget(W.QWidget):
   def __init__(self, pathes):

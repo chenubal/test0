@@ -60,30 +60,33 @@ class Billing():
     storeFile(dir + '/bills.txt',self.writeBills()) 
     storeFile(dir + '/trips.txt',self.writeTrips()) 
 
-  def drivers(self):
-    d = []
-    for x in self.trips: 
-      if not d.count(x.driver) : d.append(x.driver)
-    for x in self.bills: 
-      if not d.count(x.driver) : d.append(x.driver)
-    return d
-  def dtrip(self, name):
-    t = 0
-    for x in self.trips: 
-      if name == str(x.driver) : t += x.dist()
-    return t
+  def allDriver(self):
+    result = []
+    for trip in self.trips: 
+      if not result.count(trip.driver) : result.append(trip.driver)
+    for bill in self.bills: 
+      if not result.count(bill.driver) : result.append(bill.driver)
+    return result
   
-  def dbill(self, name):
-    t = 0
-    for x in self.bills: 
-      if name == str(x.driver) : t += x.amount
-    return t
+  def dtrip(self, driver=None):
+    result = 0
+    all = driver is None
+    for trip in self.trips: 
+      if  all or driver == trip.driver : 
+        result += trip.dist()
+    return result
+  
+  def dbill(self, driver=None):
+    result = 0
+    all = driver is None
+    for bill in self.bills: 
+      if all or driver == bill.driver: 
+        result += bill.amount
+    return result
  
   def report(self):
-    totalTrips = 0
-    for x in self.trips: totalTrips += x.dist()
-    totalBills = 0
-    for x in self.bills: totalBills += x.amount
+    totalTrips = self.dtrip()
+    totalBills = self.dbill()
     totalEnsure = totalTrips * 0.05
     total = totalEnsure+totalBills
     s = f'----------------- {self.name} -----------------------\n'
@@ -94,12 +97,12 @@ class Billing():
     s += f'Quote (R):  {round(100*totalBills/totalTrips,2)} ct/km\n'
     s += f'Quote (T):  {round(100*total/totalTrips,2)} ct/km\n'
     s += f'Vesicherung:  5.00 ct/km\n'
-    for x in self.drivers():
-      dBill = self.dbill(str(x))
-      dRatio = self.dtrip(str(x))/totalTrips
+    for drv in self.allDriver():
+      dBill = self.dbill(drv)
+      dRatio = self.dtrip(drv)/totalTrips
       dTotal = dRatio*total
       s += f'-------------------------------\n'
-      s += f'Fahrer: {str(x)}\n'
+      s += f'Fahrer: {str(drv)}\n'
       s += f'Quote = {round(dRatio,2)}\n'
       s += f'Anteil = {round(dTotal,2)}€\n'
       s += f'Bezahlt = {round(dBill,2)}€\n'
