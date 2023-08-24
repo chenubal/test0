@@ -1,32 +1,67 @@
 import PySide6 .QtWidgets as W
-from fb import Billing  
+import os
+from fb import Billing , getBillingPathes, getDBPath 
+from datetime import datetime
+from pathlib import Path
+import shutil
+
 
 class Pathes_Widget(W.QWidget):
-  def __init__(self, pathes, follower):
+  def __init__(self, follower):
     super().__init__()
-    self.pathes = pathes
-    self.lw = self.makeWidgets()
-    self.makeConnection(follower)
-    self.fillList()
- 
+    self.pathes = getBillingPathes()
+    self.lw = self.makePathWidgets(follower)
+  
     vbox = W.QVBoxLayout()
     vbox.addWidget(W.QLabel('Abrechnungen:'))
     vbox.addWidget(self.lw) 
+    vbox.addLayout(self.makeButtonBox())
     self.setLayout(vbox)
-    
-  def makeConnection(self,follower):
-    sendPath = lambda i: follower.update(str(self.pathes[i].absolute()))
-    self.lw.currentRowChanged.connect(sendPath)
-    
-  def makeWidgets(self):
+ 
+    self.update()
+
+  def addBilling(self):
+    p = getDBPath()
+    if p.is_dir():
+      now = datetime.now().strftime('%d-%m-%Y')
+      ps = str(p.absolute()) +f'/Abrechnung am {now}'
+      if not Path(ps).exists(): 
+        os.mkdir(ps) 
+        Billing().store(ps)
+        self.pathes = getBillingPathes()
+        self.update()
+
+  def delBilling(self):
+    n = self.lw.currentRow()
+    if 0 <= n < len(self.pathes):
+      p = self.pathes[n]
+      shutil.rmtree(str(p.absolute()), ignore_errors=True)
+      self.pathes = getBillingPathes()
+      self.update()
+
+  def makeButtonBox(self):
+    hbox = W.QHBoxLayout()
+    addButton = W.QPushButton('Neu')
+    addButton.clicked.connect(self.addBilling)
+   
+    delButton = W.QPushButton('Löschen')
+    delButton.clicked.connect(self.delBilling)
+   
+    hbox.addWidget(addButton)
+    hbox.addWidget(delButton)
+    return hbox
+   
+  def makePathWidgets(self,follower):
     lw = W.QListWidget()
+    sendPath = lambda i: follower.update(str(self.pathes[i].absolute()))
+    lw.currentRowChanged.connect(sendPath)
     return lw
  
-  def fillList(self):
+  def update(self):
      self.lw.clear()
-     for p in self.pathes: 
-       self.lw.addItem(p.name)
-     if len(self.pathes) > 0: self.lw.setCurrentRow(0)
+     for p in self.pathes: self.lw.addItem(p.name)
+     n = len(self.pathes)
+     if n > 0: self.lw.setCurrentRow(n-1)
  
 class Billing_Widget(W.QWidget):
   def __init__(self, follower):
@@ -91,11 +126,11 @@ class ReportWidget(W.QWidget):
     self.textEdit.setText(billing.report())
 
 class MasterWidget(W.QWidget):
-  def __init__(self, pathes):
+  def __init__(self):
     super().__init__()
     reportWidget = ReportWidget()
     billingWidget = Billing_Widget(reportWidget)
-    pathesWidget = Pathes_Widget(pathes,billingWidget)
+    pathesWidget = Pathes_Widget(billingWidget)
     hbox = W.QHBoxLayout()
     hbox.addWidget(pathesWidget)
     hbox.addWidget(billingWidget)
