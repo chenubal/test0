@@ -1,4 +1,4 @@
-import PySide6 .QtWidgets as W
+import PySide6.QtWidgets as W
 import os
 from fb import Billing , getBillingPathes, getDBPath 
 from datetime import datetime
@@ -34,10 +34,12 @@ class Pathes_Widget(W.QWidget):
   def delBilling(self):
     n = self.lw.currentRow()
     if 0 <= n < len(self.pathes):
-      p = self.pathes[n]
-      shutil.rmtree(str(p.absolute()), ignore_errors=True)
-      self.pathes = getBillingPathes()
-      self.update()
+      msg = W.QMessageBox
+      if msg.question(self,'', "Wirklich löschen?", msg.Yes | msg.No)== msg.Yes:
+        p = self.pathes[n]
+        shutil.rmtree(str(p.absolute()), ignore_errors=True)
+        self.pathes = getBillingPathes()
+        self.update()
 
   def makeButtonBox(self):
     hbox = W.QHBoxLayout()
