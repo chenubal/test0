@@ -1,10 +1,34 @@
 import PySide6.QtWidgets as W
 import os
-from fb import Billing , getBillingPathes, getDBPath 
-from datetime import datetime
+from fb import Billing ,Trip, getBillingPathes, getDBPath 
+from datetime import datetime 
 from pathlib import Path
 import shutil
 
+def tripEditor(trip, users):
+  dlg = W.QDialog()
+  dlg.setMinimumSize(300,30)
+  dlg.setModal(True)
+  def newSB(x,k):
+    b = W.QSpinBox()
+    b.setRange(0,10000000)
+    b.setValue(x[k])
+    def g(n): x[k]=n
+    b.valueChanged.connect(g)
+    return b
+  a = [trip.start, trip.end, trip.driver]
+  hbox = W.QHBoxLayout()
+  hbox.addWidget(newSB(a,0))
+  hbox.addWidget(newSB(a,1))
+  btn = W.QPushButton('Ok')
+  btn.clicked.connect(dlg.accept)
+  hbox.addWidget(btn)
+  dlg.setLayout(hbox)
+  if dlg.exec()==1:
+    trip.start =a[0]
+    trip.end =a[1]
+    return True
+  return False
 
 class Pathes_Widget(W.QWidget):
   def __init__(self, follower):
@@ -20,34 +44,32 @@ class Pathes_Widget(W.QWidget):
  
     self.update()
 
-  def addBilling(self):
-    p = getDBPath()
-    if p.is_dir():
-      now = datetime.now().strftime('%d-%m-%Y')
-      ps = str(p.absolute()) +f'/Abrechnung am {now}'
-      if not Path(ps).exists(): 
-        os.mkdir(ps) 
-        Billing().store(ps)
-        self.pathes = getBillingPathes()
-        self.update()
-
-  def delBilling(self):
-    n = self.lw.currentRow()
-    if 0 <= n < len(self.pathes):
-      msg = W.QMessageBox
-      if msg.question(self,'', "Wirklich löschen?", msg.Yes | msg.No)== msg.Yes:
-        p = self.pathes[n]
-        shutil.rmtree(str(p.absolute()), ignore_errors=True)
-        self.pathes = getBillingPathes()
-        self.update()
-
   def makeButtonBox(self):
     hbox = W.QHBoxLayout()
     addButton = W.QPushButton('Neu')
-    addButton.clicked.connect(self.addBilling)
+    def addBilling():
+      p = getDBPath()
+      if p.is_dir():
+        now = datetime.now().strftime('%d-%m-%Y')
+        ps = str(p.absolute()) +f'/Abrechnung am {now}'
+        if not Path(ps).exists(): 
+          os.mkdir(ps) 
+          Billing().store(ps)
+          self.pathes = getBillingPathes()
+          self.update()
+    addButton.clicked.connect(addBilling)
    
     delButton = W.QPushButton('Löschen')
-    delButton.clicked.connect(self.delBilling)
+    def delBilling():
+      n = self.lw.currentRow()
+      if 0 <= n < len(self.pathes):
+        msg = W.QMessageBox
+        if msg.question(self,'', "Wirklich löschen?", msg.Yes | msg.No)== msg.Yes:
+          p = self.pathes[n]
+          shutil.rmtree(str(p.absolute()), ignore_errors=True)
+          self.pathes = getBillingPathes()
+          self.update()
+    delButton.clicked.connect(delBilling)
    
     hbox.addWidget(addButton)
     hbox.addWidget(delButton)
@@ -81,13 +103,14 @@ class Billing_Widget(W.QWidget):
     self.tripTable.setHorizontalHeaderLabels(['Start(km)','Ende(km)','Fahrer'])
 
     vbox = W.QVBoxLayout()
-    vbox.addWidget( W.QLabel("Rechnungen:"))
-    vbox.addWidget( self.billTable)
-    vbox.addWidget( W.QLabel("Fahrten:"))
-    vbox.addWidget( self.tripTable)
+    vbox.addWidget(W.QLabel("Rechnungen:"))
+    vbox.addWidget(self.billTable)
+    vbox.addWidget(W.QLabel("Fahrten:"))
+    vbox.addWidget(self.tripTable)
+    vbox.addLayout(self.makeTripButtonBox())
     self.setLayout(vbox)
 
-  def makeTripTable(self):
+  def updateTripTable(self):
     n = len(self.billing.trips)
     self.tripTable.clearContents()
     self.tripTable.setRowCount(n)
@@ -97,8 +120,31 @@ class Billing_Widget(W.QWidget):
       setCellWidget(i,1, f'{t.end}')
       setCellWidget(i,2, f'{t.driver}')
     self.tripTable.horizontalHeader().setSectionResizeMode(W.QHeaderView.Stretch)
+  
+  def makeTripButtonBox(self):
+    hbox = W.QHBoxLayout()
+    addButton = W.QPushButton('Neue Fahrt')
+    def addTrip() :
+      B = self.billing
+      trip = Trip(0,20,'Josef')
+      if len(B.trips) > 0:
+        trip0 = B.trips[-1]
+        trip.start = trip0.end
+        trip.end = trip.start+15
+      if tripEditor(trip,B.allDriver()):
+        B.trips.append(trip)
+        self.updateTripTable()
 
-  def makeBillTable(self):
+    addButton.clicked.connect(addTrip)
+    delButton = W.QPushButton('Letzte löschen')
+    def delTrip():
+      print('Del trip')
+    delButton.clicked.connect(delTrip)
+    hbox.addWidget(addButton)
+    hbox.addWidget(delButton)
+    return hbox
+
+  def updateBillTable(self):
     n = len(self.billing.bills)
     self.billTable.clearContents()
     self.billTable.setRowCount(n)
@@ -110,8 +156,8 @@ class Billing_Widget(W.QWidget):
 
   def update(self, path):
     self.billing.load(path)
-    self.makeBillTable()
-    self.makeTripTable()
+    self.updateBillTable()
+    self.updateTripTable()
     self.follower.update(self.billing)
 
 class ReportWidget(W.QWidget):
