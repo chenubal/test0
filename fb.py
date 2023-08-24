@@ -6,7 +6,7 @@ class Driver():
   ''' Driver class holds a drivers name'''
   def __init__(self, name = ''): self.name = name
   def __str__(self): return str(self.name)
-  def __eq__(self, other): return self.name == other.name
+  def __eq__(self, other): return str(self.name) == str(other.name)
   def valid(self): return len(self.name) > 0
   def write(self): return str(self.name)
  
