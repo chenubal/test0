@@ -134,11 +134,17 @@ class Billing_Widget(W.QWidget):
       if tripEditor(trip,B.allDriver()):
         B.trips.append(trip)
         self.updateTripTable()
+        B.store(B.name)
 
     addButton.clicked.connect(addTrip)
     delButton = W.QPushButton('Letzte löschen')
     def delTrip():
-      print('Del trip')
+      B = self.billing
+      if len(B.trips) > 0:  
+        B.trips.pop()
+        self.updateTripTable()
+        B.store(B.name)
+
     delButton.clicked.connect(delTrip)
     hbox.addWidget(addButton)
     hbox.addWidget(delButton)
@@ -158,6 +164,7 @@ class Billing_Widget(W.QWidget):
     self.billing.load(path)
     self.updateBillTable()
     self.updateTripTable()
+    self.billing.name = str(path)
     self.follower.update(self.billing)
 
 class ReportWidget(W.QWidget):
