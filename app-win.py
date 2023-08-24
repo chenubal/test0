@@ -8,7 +8,7 @@ class MainWindow(QMainWindow):
     super().__init__()
     self.setMinimumSize(1200, 500)
     self.setWindowTitle("Fahrtenbuch")
-    masterWidget = MasterWidget(getBillingPathes())
+    masterWidget = MasterWidget()
     self.setCentralWidget(masterWidget)
 
 app = QApplication(sys.argv)

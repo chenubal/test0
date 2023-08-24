@@ -92,6 +92,7 @@ class Billing():
     s += f'Tanken gesamt:  {totalBills}€\n'
     s += f'Versich. gesamt:  {totalEnsure}€\n'
     s += f'Kosten gesamt:  {total}€\n'
+    if totalTrips ==0: return s
     s += f'Quote (R):  {round(100*totalBills/totalTrips,2)} ct/km\n'
     s += f'Quote (T):  {round(100*total/totalTrips,2)} ct/km\n'
     s += f'Vesicherung:  5.00 ct/km\n'
@@ -113,7 +114,9 @@ def loadFile(fname, f):
 
 def storeFile(fname, data): open(fname,'w').write(data)
 
-def getBillingPathes(path = './billing_db' ):
+def getDBPath(): return Path('./billing_db')
+
+def getBillingPathes(path = getDBPath() ):
   p = Path(path)
   return [x for x in p.iterdir() if x.is_dir()]
 
