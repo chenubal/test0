@@ -30,7 +30,7 @@ def Users(): return ['Jannis','Luis','Josef']
 def UserIndex(s): return Users().index(s)
  
 
-def tripEditor(trip):
+def tripEditor(trip, enableStart=True):
   if not isinstance(trip,Trip): raise 'type error'
   userIndex = UserIndex(str(trip.driver))
   data = [trip.start, trip.end, max(0,userIndex)]
@@ -38,8 +38,14 @@ def tripEditor(trip):
   btn = W.QPushButton('Ok')
 
   hbox = W.QHBoxLayout()
-  hbox.addWidget(makeSpinBox(data,0))
+  sb = makeSpinBox(data,0)
+  sb.setEnabled(enableStart)
+
+  hbox.addWidget(W.QLabel('Start: '))
+  hbox.addWidget(sb)
+  hbox.addWidget(W.QLabel('Ende: '))
   hbox.addWidget(makeSpinBox(data,1))
+  hbox.addWidget(W.QLabel('Fahrer: '))
   hbox.addWidget(makeComboBox(data,2,Users()))
   hbox.addWidget(btn)
 
@@ -64,7 +70,9 @@ def billEditor(bill):
   btn = W.QPushButton('Ok')
 
   hbox = W.QHBoxLayout()
+  hbox.addWidget(W.QLabel('Summe: '))
   hbox.addWidget(makeDSpinBox(data,0))
+  hbox.addWidget(W.QLabel('Fahrer: '))
   hbox.addWidget(makeComboBox(data,1,Users()))
   hbox.addWidget(btn)
 
@@ -181,10 +189,11 @@ class Billing_Widget(W.QWidget):
     def addTrip() :
       rB = self.billing
       trip = Trip(0,20,'Josef')
-      if len(rB.trips) > 0:
+      haveTrips = len(rB.trips) > 0
+      if haveTrips:
         trip0 = rB.trips[-1]
         trip = Trip(trip0.end, trip0.end+15,trip0.driver)
-      if tripEditor(trip):
+      if tripEditor(trip,not haveTrips):
         rB.trips.append(trip)
         self.updateTripTable()
         rB.store(rB.name)
