@@ -1,6 +1,6 @@
 import PySide6.QtWidgets as W
 import os
-from fb import Billing ,Trip, Bill, Driver, getBillingPathes, getDBPath 
+from fb import Billing ,Trip, Bill, Driver, getSubDirs, getDBPath 
 from datetime import datetime 
 from pathlib import Path
 import shutil
@@ -83,7 +83,7 @@ def billEditor(bill):
 class Pathes_Widget(W.QWidget):
   def __init__(self, follower):
     super().__init__()
-    self.pathes = getBillingPathes()
+    self.pathes = getSubDirs()
     self.lw = self.makePathWidgets(follower)
   
     vbox = W.QVBoxLayout()
@@ -104,7 +104,7 @@ class Pathes_Widget(W.QWidget):
         if not Path(pathStr).exists(): 
           os.mkdir(pathStr) 
           Billing().store(pathStr)
-          self.pathes = getBillingPathes()
+          self.pathes = getSubDirs()
           self.update()
     addButton.clicked.connect(addBilling)
    
@@ -116,7 +116,7 @@ class Pathes_Widget(W.QWidget):
         if msgBox.question(self,'', "Wirklich löschen?", msgBox.Yes | msgBox.No)== msgBox.Yes:
           path = self.pathes[row]
           shutil.rmtree(str(path.absolute()), ignore_errors=True)
-          self.pathes = getBillingPathes()
+          self.pathes = getSubDirs()
           self.update()
     delButton.clicked.connect(delBilling)
    

@@ -1,7 +1,7 @@
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow
 from fb_view import MasterWidget
-from fb import getBillingPathes
+from fb import getSubDirs
 
 class MainWindow(QMainWindow):
   def __init__(self):

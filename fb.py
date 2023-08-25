@@ -1,12 +1,25 @@
 from pathlib import Path
-from functools import reduce
 import os
+
+def loadFile(fname, f):
+  if os.path.exists(fname): 
+    for s in open(fname,'r') : f(s)
+
+def storeFile(fname, data): 
+  open(fname,'w').write(data)
+
+def getDBPath(): 
+  return Path('./billing_db')
+
+def getSubDirs(path = getDBPath() ):
+  return [x for x in Path(path).iterdir() if x.is_dir()]
 
 class Driver():
   ''' Driver class holds a drivers name'''
   def __init__(self, name = ''): self.name = name
   def __str__(self): return str(self.name)
   def __eq__(self, other): return str(self.name) == str(other.name)
+
   def valid(self): return len(self.name) > 0
   def write(self): return str(self.name)
  
@@ -14,6 +27,7 @@ class Trip():
   ''' Trip class holds trip data [start,end] of a driver'''
   def __init__(self, start=0, end=0, driver='' ): self.start = int(start); self.end=int(end); self.driver = Driver(driver);
   def __str__(self): return f'Driver {self.driver}: from {self.start} to {self.end}'
+
   def valid(self): return self.end > self.end and self.driver.valid()
   def dist(self): return max(0,self.end - self.start)
   def write(self): return '\t'.join([str(self.start), str(self.end), str(self.driver)])
@@ -30,6 +44,7 @@ class Bill():
   ''' Bill class holds bill data [amount] of a driver'''
   def __init__(self, amount=0, driver='' ): self.amount = float(amount); self.driver = Driver(driver);
   def __str__(self): return f'Driver {self.driver}: amount = {self.amount}€'
+
   def valid(self): return self.amount > 0 and self.driver.valid()
   def write(self): return '\t'.join([str(self.amount), str(self.driver)])
   def read(self, serial) : self = readBill(serial); return self
@@ -44,6 +59,7 @@ class Billing():
   ''' Billing class holds bills and trips'''
   def __init__(self, name=''): self.name = name; self.bills = []; self.trips = []; self.insurance = 0.05;
   def __str__(self): return f'Billing "{self.name}"'
+
   def appendTrip(self, trip): self.trips.append(trip)  
   def appendBill(self, bill): self.bills.append(bill)  
   def clear(self) : self.trips=[]; self.bills= []
@@ -62,43 +78,28 @@ class Billing():
     storeFile(dir + '/trips.txt',self.writeTrips()) 
 
   def allDriver(self):
-    result = []
-    def add(r,x): 
-      if not r.count(x.driver) : r.append(x.driver)
-      return r
-    reduce(add, self.trips,result)
-    reduce(add, self.bills,result)
-    return result
-  
-  def driverTrips(self, driver=None):
-    def add(r,x): 
-      if driver is None or driver == x.driver: r += x.dist()
-      return r
-    return reduce(add,self.trips,0)
-  
-  def driversBill(self, driver=None):
-    def add(r,x): 
-      if driver is None or driver == x.driver: r += x.amount
-      return r
-    return reduce(add,self.bills,0)
+    r = []
+    [r.append(x.driver) for x in self.trips if x.driver not in r ]
+    [r.append(x.driver) for x in self.bills if x.driver not in r ]
+    return r
  
   def report(self):
-    totalTrips = self.driverTrips()
-    totalBills = self.driversBill()
+    totalTrips = sum(x.dist() for x in self.trips) 
+    totalBills = sum(x.amount for x in self.bills) 
     totalEnsure = totalTrips * 0.05
     total = totalEnsure+totalBills
     s = f'----------------- {Path(self.name).name} -----------------------\n'
     s += f'Reisen gesamt:  {totalTrips}km\n'
     s += f'Tanken gesamt:  {totalBills}€\n'
-    s += f'Versich. gesamt:  {totalEnsure}€\n'
+    s += f'Versich. gesamt:  {round(totalEnsure,2)}€\n'
     s += f'Kosten gesamt:  {total}€\n'
     if totalTrips ==0: return s
     s += f'Quote (R):  {round(100*totalBills/totalTrips,2)} ct/km\n'
     s += f'Quote (T):  {round(100*total/totalTrips,2)} ct/km\n'
     s += f'Versicherung:  5.00 ct/km\n'
     for drv in self.allDriver():
-      dBill = self.driversBill(drv)
-      dRatio = self.driverTrips(drv)/totalTrips
+      dBill = sum(x.amount for x in self.bills if x.driver==drv) 
+      dRatio = sum(x.dist() for x in self.trips if x.driver==drv)/totalTrips
       dTotal = dRatio*total
       s += f'-------------------------------\n'
       s += f'Fahrer: {str(drv)}\n'
@@ -107,17 +108,3 @@ class Billing():
       s += f'Bezahlt = {round(dBill,2)}€\n'
       s += f'Rest = {round(dTotal-dBill,2)}€\n'
     return s
- 
-def loadFile(fname, f):
-  if os.path.exists(fname):
-    for s in open(fname,'r') : f(s)
-
-def storeFile(fname, data): open(fname,'w').write(data)
-
-def getDBPath(): return Path('./billing_db')
-
-def getBillingPathes(path = getDBPath() ):
-  p = Path(path)
-  return [x for x in p.iterdir() if x.is_dir()]
-
-  
