@@ -1,17 +1,22 @@
 import PySide6.QtWidgets as W
 import os
-from fb import Billing ,Trip, Driver, getBillingPathes, getDBPath 
+from fb import Billing ,Trip, Bill, Driver, getBillingPathes, getDBPath 
 from datetime import datetime 
 from pathlib import Path
 import shutil
 
-def makeSpinBox(data,i):
-  spinbox = W.QSpinBox()
-  spinbox.setRange(0,10000000)
-  spinbox.setValue(data[i])
+def makeGenBox(box, data,i):
+  box.setRange(0,10000000)
+  box.setValue(data[i])
   def g(n): data[i]=n
-  spinbox.valueChanged.connect(g)
-  return spinbox
+  box.valueChanged.connect(g)
+  return box
+
+def makeSpinBox(data,i):
+  return makeGenBox(W.QSpinBox(),data,i)
+
+def makeDSpinBox(data,i):
+  return makeGenBox(W.QDoubleSpinBox(),data,i)
 
 def makeComboBox(data,i,labels):
   comboBox = W.QComboBox()
@@ -21,9 +26,13 @@ def makeComboBox(data,i,labels):
   comboBox.currentIndexChanged.connect(g)
   return comboBox
 
+def Users(): return ['Jannis','Luis','Josef']
+def UserIndex(s): return Users().index(s)
+ 
+
 def tripEditor(trip):
-  users = ['Jannis','Luis','Josef']
-  userIndex = users.index(str(trip.driver))
+  if not isinstance(trip,Trip): raise 'type error'
+  userIndex = UserIndex(str(trip.driver))
   data = [trip.start, trip.end, max(0,userIndex)]
 
   btn = W.QPushButton('Ok')
@@ -31,7 +40,32 @@ def tripEditor(trip):
   hbox = W.QHBoxLayout()
   hbox.addWidget(makeSpinBox(data,0))
   hbox.addWidget(makeSpinBox(data,1))
-  hbox.addWidget(makeComboBox(data,2,users))
+  hbox.addWidget(makeComboBox(data,2,Users()))
+  hbox.addWidget(btn)
+
+  dialog = W.QDialog()
+  dialog.setMinimumSize(300,30)
+  dialog.setModal(True)
+  dialog.setLayout(hbox)
+  btn.clicked.connect(dialog.accept)
+
+  if dialog.exec()==1 and data[1] > data[0]:
+    trip.start = data[0]
+    trip.end = data[1]
+    trip.driver = Driver(Users()[data[2]])
+    return True
+  return False
+
+def billEditor(bill):
+  if not isinstance(bill,Bill): raise 'type error'
+  userIndex = UserIndex(str(bill.driver))
+  data = [bill.amount, max(0,userIndex)]
+
+  btn = W.QPushButton('Ok')
+
+  hbox = W.QHBoxLayout()
+  hbox.addWidget(makeDSpinBox(data,0))
+  hbox.addWidget(makeComboBox(data,1,Users()))
   hbox.addWidget(btn)
 
   dialog = W.QDialog()
@@ -41,9 +75,8 @@ def tripEditor(trip):
   btn.clicked.connect(dialog.accept)
 
   if dialog.exec()==1:
-    trip.start = data[0]
-    trip.end = data[1]
-    trip.driver = Driver(users[data[2]])
+    bill.amount = data[0]
+    bill.driver = Driver(Users()[data[1]])
     return True
   return False
 
@@ -120,8 +153,10 @@ class Billing_Widget(W.QWidget):
     self.tripTable.setHorizontalHeaderLabels(['Start(km)','Ende(km)','Fahrer'])
 
     vbox = W.QVBoxLayout()
-    vbox.addWidget(W.QLabel("Rechnungen:"))
+    vbox.addWidget(W.QLabel("Quittungen:"))
     vbox.addWidget(self.billTable)
+    vbox.addLayout(self.makeBillButtonBox())
+   
     vbox.addWidget(W.QLabel("Fahrten:"))
     vbox.addWidget(self.tripTable)
     vbox.addLayout(self.makeTripButtonBox())
@@ -142,19 +177,18 @@ class Billing_Widget(W.QWidget):
     self.follower.update(rB)
   
   def makeTripButtonBox(self):
-    hbox = W.QHBoxLayout()
-    addButton = W.QPushButton('Neue Fahrt')
+
     def addTrip() :
       rB = self.billing
       trip = Trip(0,20,'Josef')
       if len(rB.trips) > 0:
         trip0 = rB.trips[-1]
-        trip = Trip(trip0.end, trip0.start+15,trip0.driver)
+        trip = Trip(trip0.end, trip0.end+15,trip0.driver)
       if tripEditor(trip):
         rB.trips.append(trip)
         self.updateTripTable()
         rB.store(rB.name)
-    addButton.clicked.connect(addTrip)
+ 
     delButton = W.QPushButton('Letzte löschen')
     def delTrip():
       refB = self.billing
@@ -162,6 +196,10 @@ class Billing_Widget(W.QWidget):
         refB.trips.pop()
         self.updateTripTable()
         refB.store(refB.name)
+    
+    hbox = W.QHBoxLayout()
+    addButton = W.QPushButton('Neue Fahrt')
+    addButton.clicked.connect(addTrip)
     delButton.clicked.connect(delTrip)
     hbox.addWidget(addButton)
     hbox.addWidget(delButton)
@@ -178,6 +216,34 @@ class Billing_Widget(W.QWidget):
       setCellWidget(index,0, f'{bill.amount}€')
       setCellWidget(index,1, f'{bill.driver}')
     rT.horizontalHeader().setSectionResizeMode(W.QHeaderView.Stretch)
+    self.follower.update(rB)
+
+  def makeBillButtonBox(self):
+    def addBill() :
+      rB = self.billing
+      bill = Bill(10.0,'Josef')
+      if len(rB.bills) > 0:
+        bill.driver = rB.bills[-1].driver
+      if billEditor(bill):
+        rB.bills.append(bill)
+        self.updateBillTable()
+        rB.store(rB.name)
+
+    def delBill():
+      refB = self.billing
+      if len(refB.bills) > 0:  
+        refB.bills.pop()
+        self.updateBillTable()
+        refB.store(refB.name)
+
+    hbox = W.QHBoxLayout()
+    addButton = W.QPushButton('Neue Rechnung')
+    delButton = W.QPushButton('Letzte löschen')
+    addButton.clicked.connect(addBill)
+    delButton.clicked.connect(delBill)
+    hbox.addWidget(addButton)
+    hbox.addWidget(delButton)
+    return hbox
 
   def update(self, path):
     rB = self.billing

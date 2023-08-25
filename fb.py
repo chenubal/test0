@@ -87,7 +87,7 @@ class Billing():
     totalBills = self.driversBill()
     totalEnsure = totalTrips * 0.05
     total = totalEnsure+totalBills
-    s = f'----------------- {self.name} -----------------------\n'
+    s = f'----------------- {Path(self.name).name} -----------------------\n'
     s += f'Reisen gesamt:  {totalTrips}km\n'
     s += f'Tanken gesamt:  {totalBills}€\n'
     s += f'Versich. gesamt:  {totalEnsure}€\n'
@@ -95,7 +95,7 @@ class Billing():
     if totalTrips ==0: return s
     s += f'Quote (R):  {round(100*totalBills/totalTrips,2)} ct/km\n'
     s += f'Quote (T):  {round(100*total/totalTrips,2)} ct/km\n'
-    s += f'Vesicherung:  5.00 ct/km\n'
+    s += f'Versicherung:  5.00 ct/km\n'
     for drv in self.allDriver():
       dBill = self.driversBill(drv)
       dRatio = self.driverTrips(drv)/totalTrips
