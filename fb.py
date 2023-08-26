@@ -15,7 +15,7 @@ def getSubDirs(path = getDBPath() ):
   return [x for x in Path(path).iterdir() if x.is_dir()]
 
 class Driver():
-  ''' Driver class holds a drivers name'''
+  ''' Driver class modles a driver'''
   def __init__(self, name = ''): self.name = name
   def __str__(self): return str(self.name)
   def __eq__(self, other): return str(self.name) == str(other.name)
@@ -24,7 +24,7 @@ class Driver():
   def write(self): return str(self.name)
  
 class Trip():
-  ''' Trip class holds trip data [start,end] of a driver'''
+  ''' Trip class manages trip data [start,end] of a driver'''
   def __init__(self, start=0, end=0, driver='' ): self.start = int(start); self.end=int(end); self.driver = Driver(driver);
   def __str__(self): return f'Driver {self.driver}: from {self.start} to {self.end}'
 
@@ -34,6 +34,7 @@ class Trip():
   def read(self, serial) : self = readTrip(serial); return self
  
 def readTrip(serial) :
+  ''' returns a Trip object from a serial string'''
   s = '0'; e='0'; d='' 
   serial = serial.strip()
   if serial.count('\t') == 2: 
@@ -41,7 +42,7 @@ def readTrip(serial) :
   return Trip(int(s),int(e), Driver(d))
  
 class Bill():
-  ''' Bill class holds bill data [amount] of a driver'''
+  ''' Bill class manages bill data [amount] of a driver'''
   def __init__(self, amount=0, driver='' ): self.amount = float(amount); self.driver = Driver(driver);
   def __str__(self): return f'Driver {self.driver}: amount = {self.amount}€'
 
@@ -50,13 +51,14 @@ class Bill():
   def read(self, serial) : self = readBill(serial); return self
 
 def readBill(serial) : 
+  ''' returns a Bill object from a serial string'''
   a = '0'; d='' 
   if serial.count('\t') == 1: 
     a,d = serial.strip().split('\t')
   return Bill(float(a), Driver(d))
   
 class Billing():
-  ''' Billing class holds bills and trips'''
+  ''' Billing class manages bills and trips and gives an report'''
   def __init__(self, name=''): self.name = name; self.bills = []; self.trips = []; self.insurance = 0.05;
   def __str__(self): return f'Billing "{self.name}"'
 
@@ -67,6 +69,7 @@ class Billing():
   def writeBills(self): return '\n'.join(map(lambda b: b.write(), self.bills)) 
 
   def load(self, dir):
+    ''' load billing data from a folder'''
     self.clear()
     loadFile(dir + '\\bills.txt',lambda s: self.appendBill(readBill(s)) )
     loadFile(dir + '\\trips.txt',lambda s: self.appendTrip(readTrip(s)) )
@@ -74,16 +77,19 @@ class Billing():
     return self
  
   def store(self, dir):
+    ''' stores billing data to a folder'''
     storeFile(dir + '/bills.txt',self.writeBills()) 
     storeFile(dir + '/trips.txt',self.writeTrips()) 
 
   def allDriver(self):
+    ''' collects a driver from bills and trips'''
     r = []
     [r.append(x.driver) for x in self.trips if x.driver not in r ]
     [r.append(x.driver) for x in self.bills if x.driver not in r ]
     return r
  
   def report(self):
+    ''' compiles a report to a string'''
     totalTrips = sum(x.dist() for x in self.trips) 
     totalBills = sum(x.amount for x in self.bills) 
     totalEnsure = totalTrips * 0.05
