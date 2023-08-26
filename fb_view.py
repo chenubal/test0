@@ -1,9 +1,9 @@
 import PySide6.QtWidgets as W
-import os
 from fb import Billing ,Trip, Bill, Driver, getSubDirs, getDBPath 
 from datetime import datetime 
-from pathlib import Path
 import shutil
+from pathlib import Path
+import os
 
 def makeGenBox(box, data,i):
   box.setRange(0,10000000)
@@ -35,25 +35,26 @@ def tripEditor(trip, enableStart=True):
   userIndex = UserIndex(str(trip.driver))
   data = [trip.start, trip.end, max(0,userIndex)]
 
-  btn = W.QPushButton('Ok')
+  okBtn = W.QPushButton('Ok')
 
   hbox = W.QHBoxLayout()
-  sb = makeSpinBox(data,0)
-  sb.setEnabled(enableStart)
+  endSpinbox = makeSpinBox(data,0)
+  endSpinbox.setEnabled(enableStart)
 
   hbox.addWidget(W.QLabel('Start: '))
-  hbox.addWidget(sb)
+  hbox.addWidget(endSpinbox)
   hbox.addWidget(W.QLabel('Ende: '))
   hbox.addWidget(makeSpinBox(data,1))
   hbox.addWidget(W.QLabel('Fahrer: '))
   hbox.addWidget(makeComboBox(data,2,Users()))
-  hbox.addWidget(btn)
+  hbox.addWidget(okBtn)
 
   dialog = W.QDialog()
+  dialog.setWindowTitle('Neue Fahrt')
   dialog.setMinimumSize(300,30)
   dialog.setModal(True)
   dialog.setLayout(hbox)
-  btn.clicked.connect(dialog.accept)
+  okBtn.clicked.connect(dialog.accept)
 
   if dialog.exec()==1 and data[1] > data[0]:
     trip.start = data[0]
@@ -77,6 +78,7 @@ def billEditor(bill):
   hbox.addWidget(btn)
 
   dialog = W.QDialog()
+  dialog.setWindowTitle('Neue Quittung')
   dialog.setMinimumSize(300,30)
   dialog.setModal(True)
   dialog.setLayout(hbox)
@@ -177,27 +179,28 @@ class Billing_Widget(W.QWidget):
     rT.clearContents()
     rT.setRowCount(numTrips)
     setCellWidget = lambda i,j,s: rT.setCellWidget(i,j, W.QLabel(s))
-    for index,trip in zip(range(numTrips),rB.trips):
-      setCellWidget(index,0, f'{trip.start}')
-      setCellWidget(index,1, f'{trip.end}')
-      setCellWidget(index,2, f'{trip.driver}')
+    for i,trip in enumerate(rB.trips):
+      setCellWidget(i,0, f'{trip.start}')
+      setCellWidget(i,1, f'{trip.end}')
+      setCellWidget(i,2, f'{trip.driver}')
     rT.horizontalHeader().setSectionResizeMode(W.QHeaderView.Stretch)
-    self.follower.update(rB)
+    self.notify()
   
   def makeTripButtonBox(self):
-
+    # create widget functions
     def addTrip() :
       rB = self.billing
       trip = Trip(0,20,'Josef')
+       # take last item as template
       haveTrips = len(rB.trips) > 0
       if haveTrips:
         trip0 = rB.trips[-1]
         trip = Trip(trip0.end, trip0.end+15,trip0.driver)
+      #open trip editor and add on success
       if tripEditor(trip,not haveTrips):
         rB.trips.append(trip)
         self.updateTripTable()
         rB.store(rB.name)
- 
     delButton = W.QPushButton('Letzte löschen')
     def delTrip():
       refB = self.billing
@@ -205,7 +208,7 @@ class Billing_Widget(W.QWidget):
         refB.trips.pop()
         self.updateTripTable()
         refB.store(refB.name)
-    
+    # compile widget
     hbox = W.QHBoxLayout()
     addButton = W.QPushButton('Neue Fahrt')
     addButton.clicked.connect(addTrip)
@@ -214,18 +217,24 @@ class Billing_Widget(W.QWidget):
     hbox.addWidget(delButton)
     return hbox
 
+  def notify(self):
+    if not self.follower is None: 
+      self.follower.update(self.billing)
+
   def updateBillTable(self):
+    # setup
     rB = self.billing
     rT = self.billTable
     numBills = len(rB.bills)
+    # rebuild table from data
     rT.clearContents()
     rT.setRowCount(numBills)
     setCellWidget = lambda n,m,s: rT.setCellWidget(n,m, W.QLabel(s))
-    for index,bill in zip(range(numBills), rB.bills):
-      setCellWidget(index,0, f'{bill.amount}€')
-      setCellWidget(index,1, f'{bill.driver}')
+    for i,bill in enumerate(rB.bills):
+      setCellWidget(i,0, f'{bill.amount}€')
+      setCellWidget(i,1, f'{bill.driver}')
     rT.horizontalHeader().setSectionResizeMode(W.QHeaderView.Stretch)
-    self.follower.update(rB)
+    self.notify()
 
   def makeBillButtonBox(self):
     def addBill() :
@@ -260,7 +269,7 @@ class Billing_Widget(W.QWidget):
     self.updateBillTable()
     self.updateTripTable()
     rB.name = str(path)
-    self.follower.update(rB)
+    self.notify()
 
 class ReportWidget(W.QWidget):
   def __init__(self):
