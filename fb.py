@@ -111,29 +111,30 @@ class Billing():
  
   def report(self):
     ''' compiles a report to a string'''
+    rnd = lambda n :f"{n:.2f}"
     maintainRate = 0.07
     totalTrips = sum(x.dist() for x in self.trips) 
     totalBills = sum(x.amount for x in self.bills) 
     totalMaintain = totalTrips * maintainRate
     totalAmount = totalMaintain + totalBills
     s = f'----------------- {Path(self.name).name} -----------------------\n'
-    s += f'Reisen gesamt:  {totalTrips}km\n'
-    s += f'Tanken gesamt:  {totalBills}€\n'
-    s += f'Nebenkosten  :  {round(totalMaintain,2)}€\n'
-    s += f'Kosten gesamt:  {round(totalAmount,2)}€\n'
+    s += f'Reisen gesamt:  {totalTrips} km\n'
+    s += f'Tanken gesamt:  {rnd(totalBills)}€\n'
+    s += f'Nebenkosten  :  {rnd(totalMaintain)}€\n'
+    s += f'Kosten gesamt:  {rnd(totalAmount)}€\n'
     if totalTrips ==0: return s
-    s += f'Quote (R):  {round(100*totalBills/totalTrips,2)} ct/km\n'
-    s += f'Quote (T):  {round(100*totalAmount/totalTrips,2)} ct/km\n'
-    s += f'Nebenkosten:  {round(maintainRate,2)} €/km\n'
+    s += f'Quote (R):  {rnd(100*totalBills/totalTrips)} ct/km\n'
+    s += f'Quote (T):  {rnd(100*totalAmount/totalTrips)} ct/km\n'
+    s += f'Nebenkosten:  {rnd(maintainRate)} €/km\n'
     for drv in self.allDriver():
       drvBill = sum(x.amount for x in self.bills if x.driver==drv) 
       drvRatio = sum(x.dist() for x in self.trips if x.driver==drv)/totalTrips
       drvAmount = drvRatio*totalAmount
       s += f'-------------------------------\n'
-      s += f'Fahrer: {str(drv)}\n'
-      s += f'Strecke = {round(drvRatio*totalTrips,2)} km\n'
-      s += f'Quote = {round(drvRatio,2)}\n'
-      s += f'Anteil = {round(drvAmount,2)}€\n'
-      s += f'Bezahlt = {round(drvBill,2)}€\n'
-      s += f'Rest = {round(drvAmount-drvBill,2)}€\n'
+      s += f'Fahrer = {str(drv)}\n'
+      s += f'Strecke = {round(drvRatio*totalTrips)} km\n'
+      s += f'Quote = {rnd(drvRatio)}\n'
+      s += f'Anteil = {rnd(drvAmount)}€\n'
+      s += f'Bezahlt = {rnd(drvBill)}€\n'
+      s += f'Rest = {rnd(drvAmount-drvBill)}€\n'
     return s

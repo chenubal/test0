@@ -108,8 +108,8 @@ class Pathes_Widget(W.QWidget):
     def addBilling():
       path = getDBPath()
       if path.is_dir():
-        now = datetime.now().strftime('%d-%m-%Y')
-        pathStr = str(path.absolute()) +f'/Abrechnung am {now}'
+        dateStr = f'{datetime.now():%Y-%m-%d}'
+        pathStr = str(path.absolute()) +f'/Abrechnung am {dateStr}'
         if not Path(pathStr).exists(): 
           os.mkdir(pathStr) 
           Billing().store(pathStr)
