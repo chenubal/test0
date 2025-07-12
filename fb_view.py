@@ -158,8 +158,8 @@ class Billing_Widget(W.QWidget):
     self.billTable.setHorizontalHeaderLabels(['Summe','Fahrer' ])
 
     self.tripTable = W.QTableWidget()
-    self.tripTable.setColumnCount(3)
-    self.tripTable.setHorizontalHeaderLabels(['Start(km)','Ende(km)','Fahrer'])
+    self.tripTable.setColumnCount(4)
+    self.tripTable.setHorizontalHeaderLabels(['Start(km)','Ende(km)','km','Fahrer'])
 
     vbox = W.QVBoxLayout()
     vbox.addWidget(W.QLabel("Quittungen:"))
@@ -181,7 +181,8 @@ class Billing_Widget(W.QWidget):
     for i,trip in enumerate(rB.trips):
       setCellWidget(i,0, f'{trip.start}')
       setCellWidget(i,1, f'{trip.end}')
-      setCellWidget(i,2, f'{trip.driver}')
+      setCellWidget(i,2, f'{trip.end - trip.start}')
+      setCellWidget(i,3, f'{trip.driver}')
     rT.horizontalHeader().setSectionResizeMode(W.QHeaderView.Stretch)
     self.notify()
   
